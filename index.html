@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#b5502f">
+<link rel="icon" href="icon-192.png">
+<title>Dotnect 口コミ管理</title>
+<style>
+  :root{
+    --bg:#f6f4ee;
+    --panel:#ffffff;
+    --ink:#25231f;
+    --sub:#726c62;
+    --line:#e4e0d6;
+    --accent:#b5502f;
+    --accent-soft:#f2e2d8;
+    --ok:#3f6b4a;
+    --ok-soft:#e3ede3;
+    --warn:#a8791f;
+    --warn-soft:#f6ecd8;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    min-height:100vh;
+  }
+  .wrap{max-width:900px;margin:0 auto;padding:26px 20px 80px;}
+  header{margin-bottom:18px;border-bottom:1px solid var(--line);padding-bottom:14px;}
+  .brand-row{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:14px;}
+  header h1{font-size:19px;font-weight:600;margin:0;letter-spacing:.02em;}
+  header p{font-size:12.5px;color:var(--sub);margin:4px 0 0;}
+  .datebadge{font-size:12px;color:var(--sub);border:1px solid var(--line);padding:5px 10px;border-radius:20px;background:var(--panel);}
+
+  .client-bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  .client-select{font-size:13.5px;font-weight:600;border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--panel);color:var(--ink);flex:1;min-width:160px;max-width:280px;}
+  .client-count{font-size:12px;color:var(--sub);}
+  .btn{border:1px solid var(--line);background:var(--panel);border-radius:8px;font-size:12px;padding:7px 12px;cursor:pointer;}
+  .btn.primary{background:var(--accent);color:#fff;border-color:var(--accent);}
+  .btn.small{padding:5px 9px;font-size:11.5px;}
+  .btn.danger{color:var(--warn);}
+
+  .add-client-form{display:none;gap:8px;flex-wrap:wrap;margin-top:10px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;}
+  .add-client-form.open{display:flex;}
+  .add-client-form input{font-size:13px;border:1px solid var(--line);border-radius:8px;padding:7px 9px;flex:1;min-width:140px;}
+
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:20px 0 20px;}
+  .tabs{display:flex;gap:4px;margin:0 0 18px;border-bottom:1px solid var(--line);}
+  .tab{padding:9px 14px;font-size:13.5px;color:var(--sub);cursor:pointer;border-bottom:2px solid transparent;user-select:none;}
+  .tab.active{color:var(--ink);border-bottom-color:var(--accent);font-weight:600;}
+  .panel{display:none;}
+  .panel.active{display:block;}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:13px 15px;}
+  .stat .n{font-size:22px;font-weight:600;}
+  .stat .l{font-size:12px;color:var(--sub);margin-top:2px;}
+
+  h2.section{font-size:14.5px;font-weight:600;margin:0 0 10px;}
+  .filter-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+  .filter-chip{font-size:12px;padding:5px 12px;border-radius:20px;border:1px solid var(--line);background:var(--panel);color:var(--sub);cursor:pointer;}
+  .filter-chip.active{background:var(--accent-soft);color:var(--accent);border-color:var(--accent);font-weight:600;}
+
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:10px;}
+  .day-row{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:11px 14px;margin-bottom:8px;}
+  .day-info{flex:1;min-width:0;}
+  .day-info .t{font-size:13.5px;font-weight:600;}
+  .day-info .p{font-size:11.5px;color:var(--sub);margin-top:1px;}
+  select.status{font-size:12px;border:1px solid var(--line);border-radius:8px;padding:5px 8px;background:var(--panel);color:var(--ink);}
+  .remove-post{background:none;border:none;color:var(--sub);cursor:pointer;font-size:16px;line-height:1;padding:2px 4px;}
+  .remove-post:hover{color:var(--warn);}
+  .review-card .rev-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+  .rev-meta{font-size:12.5px;font-weight:600;}
+  .rev-stars{color:var(--warn);font-size:12px;margin-left:4px;}
+  .badge{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:600;white-space:nowrap;}
+  .badge.on{background:var(--ok-soft);color:var(--ok);}
+  .badge.off{background:var(--warn-soft);color:var(--warn);}
+  .rev-text{font-size:13px;color:var(--sub);margin:0 0 8px;line-height:1.5;}
+  .rev-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+  select.tmpl{font-size:12px;border:1px solid var(--line);border-radius:8px;padding:6px 8px;flex:1;min-width:160px;background:var(--panel);}
+  .rev-reply{font-size:12px;background:#fdfcfa;border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-top:8px;color:var(--ink);}
+  .empty{font-size:13px;color:var(--sub);text-align:center;padding:30px 10px;}
+  textarea.draft{width:100%;font-size:12.5px;border:1px solid var(--line);border-radius:8px;padding:8px 10px;margin-top:8px;min-height:50px;font-family:inherit;resize:vertical;background:#fdfcfa;}
+  .add-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+  .add-row input, .add-row select{font-size:12.5px;border:1px solid var(--line);border-radius:8px;padding:7px 9px;background:var(--panel);}
+  .add-row input[type=text]{flex:1;min-width:160px;}
+  .save-hint{font-size:11px;color:var(--sub);text-align:right;margin-top:14px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand-row">
+      <div>
+        <h1>Dotnect 口コミ管理</h1>
+        <p>複数クライアントの口コミを一元管理・返信</p>
+      </div>
+      <div class="datebadge" id="todayBadge"></div>
+    </div>
+    <div class="client-bar">
+      <select class="client-select" id="clientSelect"></select>
+      <span class="client-count" id="clientCount"></span>
+      <button class="btn small" id="addClientToggle">+ クライアント追加</button>
+      <button class="btn small danger" id="removeClientBtn">このクライアントを削除</button>
+    </div>
+    <div class="add-client-form" id="addClientForm">
+      <input type="text" id="newClientName" placeholder="クライアント名（例：〇〇食堂）">
+      <input type="text" id="newClientIndustry" placeholder="業種（例：ラーメン店）">
+      <button class="btn primary small" id="addClientConfirm">追加する</button>
+    </div>
+  </header>
+
+  <div class="stat-grid">
+    <div class="stat"><div class="n" id="statTotal">-</div><div class="l">口コミ総数</div></div>
+    <div class="stat"><div class="n" id="statPending">-</div><div class="l">未返信の口コミ</div></div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="posts">GBP投稿</div>
+    <div class="tab" data-tab="reviews">口コミ返信</div>
+  </div>
+
+  <div class="panel active" id="panel-posts">
+    <h2 class="section">GBP投稿</h2>
+    <div id="gbpPostList"></div>
+    <div class="card">
+      <div class="add-row">
+        <input type="text" id="newPostTitle" placeholder="投稿タイトル">
+        <input type="text" id="newPostPillar" placeholder="内容（例：新メニュー紹介）">
+        <button class="btn" id="addPostBtn">追加</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-reviews">
+    <h2 class="section">口コミ返信キュー</h2>
+    <div class="filter-row" id="reviewFilterRow"></div>
+    <div id="reviewList"></div>
+    <div class="card">
+      <div class="add-row">
+        <select id="newRevPlatform"></select>
+        <select id="newRevStars">
+          <option value="5">★5</option>
+          <option value="4">★4</option>
+          <option value="3">★3</option>
+          <option value="2">★2</option>
+          <option value="1">★1</option>
+        </select>
+        <input type="text" id="newRevText" placeholder="口コミ本文を貼り付け">
+        <button class="btn" id="addRevBtn">追加</button>
+      </div>
+    </div>
+  </div>
+
+  <p class="save-hint" id="saveHint"></p>
+</div>
+
+<script>
+const PLATFORMS = [
+  {id:'gmap', name:'Googleマップ'},
+  {id:'yahoo', name:'ヤフープレイス'}
+];
+
+const TEMPLATES = [
+  {label:'高評価・お礼', text:'この度はご来店いただき、誠にありがとうございます。温かいお言葉を励みに、スタッフ一同より一層努力してまいります。またのお越しを心よりお待ちしております。'},
+  {label:'低評価・お詫び', text:'この度はご不快な思いをさせてしまい、誠に申し訳ございませんでした。いただいたご意見は真摯に受け止め、店舗運営の改善に努めてまいります。'},
+  {label:'接客への言及', text:'貴重なご意見をありがとうございます。スタッフの対応につきまして、店舗内で共有し、より良いサービスをご提供できるよう改善してまいります。'},
+  {label:'待ち時間への言及', text:'お待たせしてしまい申し訳ございませんでした。オペレーションを見直し、お客様をお待たせしない体制づくりに努めてまいります。'}
+];
+
+function defaultGbpPosts(){
+  return [
+    {title:'メニュー紹介投稿', pillar:'定番/新メニューの紹介', status:'未着手', draft:''},
+    {title:'クーポン告知', pillar:'既存フォロワー向け特典', status:'未着手', draft:''},
+    {title:'新規登録・フォロー特典', pillar:'新規顧客向け特典', status:'未着手', draft:''},
+    {title:'営業時間・お知らせ', pillar:'営業時間・臨時休業の告知', status:'未着手', draft:''}
+  ];
+}
+
+function newClient(name, industry){
+  return {
+    id: 'c' + Date.now() + Math.floor(Math.random()*1000),
+    name: name || '新規クライアント',
+    industry: industry || '',
+    gbpPosts: defaultGbpPosts(),
+    reviews: []
+  };
+}
+
+let state = {
+  currentClientId: null,
+  clients: [
+    Object.assign(newClient('㐂濱家', 'ラーメン店'), {
+      gbpPosts: [
+        {title:'ラーメン紹介投稿', pillar:'ラーメンの種類紹介', status:'下書き済み', draft:''},
+        {title:'LINEクーポン告知', pillar:'既存LINE友だち向けクーポン', status:'未着手', draft:''},
+        {title:'新規LINE登録クーポン', pillar:'新規登録者向け特典', status:'未着手', draft:''},
+        {title:'営業時間案内', pillar:'営業時間・臨時休業の告知', status:'未着手', draft:''}
+      ],
+      reviews: [
+        {id:'r1', platform:'Googleマップ', stars:4, text:'スタッフの対応が丁寧でした。また来ます。', replied:false, reply:''},
+        {id:'r2', platform:'ヤフープレイス', stars:3, text:'注文の確認に少し時間がかかりました。', replied:false, reply:''}
+      ]
+    })
+  ]
+};
+state.currentClientId = state.clients[0].id;
+
+function currentClient(){
+  return state.clients.find(c => c.id === state.currentClientId) || state.clients[0];
+}
+
+let reviewFilter = 'すべて';
+
+async function loadState(){
+  try{
+    const res = await window.storage.get('dotnect-review-state');
+    if(res && res.value){
+      const parsed = JSON.parse(res.value);
+      if(parsed && parsed.clients && parsed.clients.length){
+        state = parsed;
+      }
+    }
+  }catch(e){
+    // no saved state yet, use defaults
+  }
+  render();
+}
+
+async function saveState(){
+  try{
+    await window.storage.set('dotnect-review-state', JSON.stringify(state));
+    const hint = document.getElementById('saveHint');
+    hint.textContent = '保存しました ' + new Date().toLocaleTimeString('ja-JP');
+    setTimeout(()=>{ if(hint.textContent.startsWith('保存')) hint.textContent=''; }, 2000);
+  }catch(e){
+    console.error('save failed', e);
+  }
+}
+
+function render(){
+  renderClientSelect();
+  renderStats();
+  renderGbpPosts();
+  renderReviewFilter();
+  renderReviewPlatformOptions();
+  renderReviews();
+}
+
+function renderGbpPosts(){
+  const c = currentClient();
+  if(!c.gbpPosts) c.gbpPosts = [];
+  const list = document.getElementById('gbpPostList');
+  list.innerHTML = '';
+  if(c.gbpPosts.length === 0){
+    list.innerHTML = '<div class="empty">投稿予定はまだありません</div>';
+    return;
+  }
+  c.gbpPosts.forEach((post, idx) => {
+    const row = document.createElement('div');
+    row.className = 'day-row';
+    row.innerHTML = `
+      <div class="day-info">
+        <div class="t">${escapeHtml(post.title)}</div>
+        <div class="p">${escapeHtml(post.pillar)}</div>
+        <textarea class="draft" placeholder="投稿文の下書きをここに書く">${escapeHtml(post.draft || '')}</textarea>
+      </div>
+      <select class="status" data-idx="${idx}">
+        <option ${post.status==='未着手'?'selected':''}>未着手</option>
+        <option ${post.status==='下書き済み'?'selected':''}>下書き済み</option>
+        <option ${post.status==='完了'?'selected':''}>完了</option>
+      </select>
+      <button class="remove-post" data-idx="${idx}" aria-label="削除">×</button>
+    `;
+    list.appendChild(row);
+    row.querySelector('.status').addEventListener('change', (e) => {
+      currentClient().gbpPosts[idx].status = e.target.value;
+      saveState();
+    });
+    row.querySelector('.draft').addEventListener('change', (e) => {
+      currentClient().gbpPosts[idx].draft = e.target.value;
+      saveState();
+    });
+    row.querySelector('.remove-post').addEventListener('click', () => {
+      currentClient().gbpPosts.splice(idx, 1);
+      renderGbpPosts();
+      saveState();
+    });
+  });
+}
+
+function renderClientSelect(){
+  const sel = document.getElementById('clientSelect');
+  sel.innerHTML = state.clients.map(c =>
+    `<option value="${c.id}" ${c.id === state.currentClientId ? 'selected' : ''}>${escapeHtml(c.name)}${c.industry ? '（'+escapeHtml(c.industry)+'）' : ''}</option>`
+  ).join('');
+  document.getElementById('clientCount').textContent = `全 ${state.clients.length} 件`;
+}
+
+function renderStats(){
+  const c = currentClient();
+  document.getElementById('statTotal').textContent = c.reviews.length;
+  document.getElementById('statPending').textContent = c.reviews.filter(r => !r.replied).length;
+}
+
+function renderReviewFilter(){
+  const row = document.getElementById('reviewFilterRow');
+  const names = ['すべて', ...PLATFORMS.map(p => p.name)];
+  row.innerHTML = names.map(n =>
+    `<button type="button" class="filter-chip${n === reviewFilter ? ' active' : ''}" data-name="${escapeHtml(n)}">${escapeHtml(n)}</button>`
+  ).join('');
+  row.querySelectorAll('.filter-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      reviewFilter = chip.dataset.name;
+      renderReviewFilter();
+      renderReviews();
+    });
+  });
+}
+
+function renderReviewPlatformOptions(){
+  const sel = document.getElementById('newRevPlatform');
+  const current = sel.value;
+  sel.innerHTML = PLATFORMS.map(p => `<option value="${escapeHtml(p.name)}">${escapeHtml(p.name)}</option>`).join('');
+  if(PLATFORMS.some(p => p.name === current)) sel.value = current;
+}
+
+function renderReviews(){
+  const c = currentClient();
+  const list = document.getElementById('reviewList');
+  list.innerHTML = '';
+  const filtered = reviewFilter === 'すべて' ? c.reviews : c.reviews.filter(r => r.platform === reviewFilter);
+  if(filtered.length === 0){
+    list.innerHTML = `<div class="empty">${c.reviews.length === 0 ? '口コミはまだありません' : 'このプラットフォームの口コミはまだありません'}</div>`;
+    return;
+  }
+  filtered.forEach((rev) => {
+    const card = document.createElement('div');
+    card.className = 'card review-card';
+    const tmplOptions = TEMPLATES.map(t => `<option value="${t.label}">${t.label}</option>`).join('');
+    card.innerHTML = `
+      <div class="rev-top">
+        <div class="rev-meta">${escapeHtml(rev.platform)} <span class="rev-stars">${'★'.repeat(rev.stars)}${'☆'.repeat(5-rev.stars)}</span></div>
+        ${rev.replied ? '<span class="badge on">返信済み</span>' : '<span class="badge off">未返信</span>'}
+      </div>
+      <p class="rev-text">${escapeHtml(rev.text)}</p>
+      ${rev.replied ? `<div class="rev-reply">${escapeHtml(rev.reply)}</div>` : `
+        <div class="rev-actions">
+          <select class="tmpl">${tmplOptions}</select>
+          <button class="btn small" data-action="fill">テンプレを挿入</button>
+          <button class="btn primary small" data-action="reply">返信済みにする</button>
+        </div>
+        <textarea class="draft reply-draft" placeholder="返信文（テンプレ挿入後に編集可）"></textarea>
+      `}
+    `;
+    list.appendChild(card);
+
+    if(!rev.replied){
+      const tmplSel = card.querySelector('.tmpl');
+      const draftArea = card.querySelector('.reply-draft');
+      card.querySelector('[data-action="fill"]').addEventListener('click', () => {
+        const chosen = TEMPLATES.find(t => t.label === tmplSel.value);
+        if(chosen) draftArea.value = chosen.text;
+      });
+      card.querySelector('[data-action="reply"]').addEventListener('click', () => {
+        rev.replied = true;
+        rev.reply = draftArea.value || 'ご来店ありがとうございました。';
+        render();
+        saveState();
+      });
+    }
+  });
+}
+
+function addReview(){
+  const platform = document.getElementById('newRevPlatform').value;
+  const stars = parseInt(document.getElementById('newRevStars').value, 10);
+  const text = document.getElementById('newRevText').value.trim();
+  if(!text) return;
+  currentClient().reviews.unshift({
+    id: 'r' + Date.now(),
+    platform, stars, text, replied:false, reply:''
+  });
+  document.getElementById('newRevText').value = '';
+  render();
+  saveState();
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+document.getElementById('clientSelect').addEventListener('change', (e) => {
+  state.currentClientId = e.target.value;
+  render();
+  saveState();
+});
+
+document.getElementById('addClientToggle').addEventListener('click', () => {
+  document.getElementById('addClientForm').classList.toggle('open');
+});
+
+document.getElementById('addClientConfirm').addEventListener('click', () => {
+  const name = document.getElementById('newClientName').value.trim();
+  const industry = document.getElementById('newClientIndustry').value.trim();
+  if(!name) return;
+  const c = newClient(name, industry);
+  state.clients.push(c);
+  state.currentClientId = c.id;
+  document.getElementById('newClientName').value = '';
+  document.getElementById('newClientIndustry').value = '';
+  document.getElementById('addClientForm').classList.remove('open');
+  render();
+  saveState();
+});
+
+document.getElementById('removeClientBtn').addEventListener('click', () => {
+  if(state.clients.length <= 1){
+    alert('最後の1件は削除できません。');
+    return;
+  }
+  const c = currentClient();
+  if(!confirm(`「${c.name}」を削除しますか？この操作は取り消せません。`)) return;
+  state.clients = state.clients.filter(x => x.id !== c.id);
+  state.currentClientId = state.clients[0].id;
+  render();
+  saveState();
+});
+
+document.getElementById('addRevBtn').addEventListener('click', addReview);
+
+document.getElementById('addPostBtn').addEventListener('click', () => {
+  const title = document.getElementById('newPostTitle').value.trim();
+  const pillar = document.getElementById('newPostPillar').value.trim();
+  if(!title) return;
+  const c = currentClient();
+  if(!c.gbpPosts) c.gbpPosts = [];
+  c.gbpPosts.push({title, pillar, status:'未着手', draft:''});
+  document.getElementById('newPostTitle').value = '';
+  document.getElementById('newPostPillar').value = '';
+  renderGbpPosts();
+  saveState();
+});
+
+document.getElementById('todayBadge').textContent = new Date().toLocaleDateString('ja-JP', {year:'numeric', month:'long', day:'numeric', weekday:'short'});
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+  });
+});
+
+loadState();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js').catch(() => {});
+  });
+}
+</script>
+</body>
+</html>
